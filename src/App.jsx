@@ -207,6 +207,7 @@ function MapView({ stages, progress, isUnlocked, openStage, name, completedCount
             <p className="text-slate-600 mb-4">你獲得了 {totalStars} 顆星星</p>
             <p className="text-sm text-slate-500">你已經學會如何在心理諮商中</p>
             <p className="text-sm text-slate-500">更好地支持 LGBTQ+ 群體 🌈</p>
+            <p className="text-sm text-slate-500">開發者：ViralArc.ai</p>
           </div>
         </div>
       )}
@@ -688,22 +689,30 @@ function Stage4({ onComplete }) {
 
       <div className="space-y-3 mb-6">
         {actions.map((action, i) => (
-          <label
+          <button
             key={i}
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 transition cursor-pointer ${
+            onClick={() => toggle(action)}
+            className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 transition active:scale-95 text-left ${
               checked.includes(action)
-                ? "bg-green-50 border-green-500"
-                : "bg-white border-slate-300 hover:border-green-400"
+                ? "bg-green-50 border-green-500 shadow-md"
+                : "bg-white border-slate-300 hover:border-green-400 hover:shadow-sm"
             }`}
           >
-            <input
-              type="checkbox"
-              checked={checked.includes(action)}
-              onChange={() => toggle(action)}
-              className="mt-1 w-5 h-5 rounded"
-            />
-            <span className="text-slate-800 flex-1">{action.text}</span>
-          </label>
+            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${
+              checked.includes(action)
+                ? "bg-green-500 border-green-500"
+                : "bg-white border-slate-400"
+            }`}>
+              {checked.includes(action) && (
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className={`flex-1 ${checked.includes(action) ? "text-slate-900 font-medium" : "text-slate-800"}`}>
+              {action.text}
+            </span>
+          </button>
         ))}
       </div>
 
