@@ -632,50 +632,78 @@ function Stage3({ onComplete }) {
   );
 }
 
-// ✅ 第四關：友善行動
+// ✅ 第四關：友善行動（單選題）
 function Stage4({ onComplete }) {
-  const actions = [
-    { text: "詢問並尊重個案的代名詞", good: true },
-    { text: "保密個案的身份資料", good: true },
-    { text: "主動提供 LGBTQ+ 友善資源", good: true },
-    { text: "討論性傾向是否「正常」", good: false },
-    { text: "使用包容性的語言", good: true },
-    { text: "假設個案的性別認同", good: false },
+  const questions = [
+    {
+      question: "個案提到同性伴侶時，最適當的回應是？",
+      options: [
+        { text: "詢問「誰是男生誰是女生？」", correct: false },
+        { text: "自然回應，如同對待異性戀伴侶", correct: true },
+        { text: "表示「我不會歧視」以示友善", correct: false },
+        { text: "刻意避免深入討論", correct: false },
+      ],
+    },
+    {
+      question: "表單設計上，性別欄位最友善的做法是？",
+      options: [
+        { text: "只提供「男」和「女」選項", correct: false },
+        { text: "提供多元選項並允許自填", correct: true },
+        { text: "不詢問性別資訊", correct: false },
+        { text: "標註「生理性別」", correct: false },
+      ],
+    },
   ];
 
-  const [checked, setChecked] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [result, setResult] = useState(null);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
-  const toggle = (action) => {
-    if (submitted) return;
-    setChecked((c) => (c.includes(action) ? c.filter((x) => x !== action) : [...c, action]));
+  const selectOption = (option) => {
+    if (showFeedback) return;
+    setSelected(option);
   };
 
   const submit = () => {
-    const correctCount = checked.filter((a) => a.good).length;
-    const incorrectCount = checked.filter((a) => !a.good).length;
-    const score = correctCount - incorrectCount;
-    const stars = score >= 4 ? 3 : score >= 3 ? 2 : 1;
+    if (!selected) return;
+    setShowFeedback(true);
 
-    setResult({ correctCount, incorrectCount, stars });
-    setSubmitted(true);
-    setTimeout(() => onComplete(stars), 3000);
+    setTimeout(() => {
+      const newAnswers = [...answers, selected.correct];
+      setAnswers(newAnswers);
+
+      if (currentQ < questions.length - 1) {
+        setCurrentQ(currentQ + 1);
+        setSelected(null);
+        setShowFeedback(false);
+      } else {
+        // 所有題目完成，計算分數
+        const correctCount = newAnswers.filter(Boolean).length;
+        const stars = correctCount === 2 ? 3 : correctCount >= 1 ? 2 : 1;
+        setTimeout(() => onComplete(stars), 1500);
+      }
+    }, 1500);
   };
 
-  if (submitted) {
+  const currentQuestion = questions[currentQ];
+  const isComplete = currentQ === questions.length - 1 && showFeedback;
+  const correctCount = answers.filter(Boolean).length + (showFeedback && selected?.correct ? 1 : 0);
+
+  if (isComplete) {
+    const stars = correctCount === 2 ? 3 : correctCount >= 1 ? 2 : 1;
     return (
       <StageContainer title="完成！">
         <div className="text-center py-8 animate-bounce-once">
           <div className="text-6xl mb-4">🌟</div>
           <div className="flex gap-1 justify-center mb-4">
             {[1, 2, 3].map((s) => (
-              <span key={s} className={`text-3xl ${s <= result.stars ? "opacity-100" : "opacity-30"}`}>
+              <span key={s} className={`text-3xl ${s <= stars ? "opacity-100" : "opacity-30"}`}>
                 ⭐
               </span>
             ))}
           </div>
-          <p className="text-slate-800 mb-2">選對了 {result.correctCount} 項友善行動</p>
+          <p className="text-slate-800 mb-2">答對了 {correctCount} / 2 題</p>
           <p className="text-slate-600 text-sm mt-4">持續學習和實踐</p>
           <p className="text-slate-600 text-sm">讓諮商空間更加友善！</p>
         </div>
@@ -684,44 +712,70 @@ function Stage4({ onComplete }) {
   }
 
   return (
-    <StageContainer title="友善行動" subtitle="勾選你認為重要的實踐方式">
-      <p className="text-sm text-slate-600 mb-4">💡 提示：有些選項可能不適當喔</p>
+    <StageContainer title="友善行動" subtitle={`第 ${currentQ + 1} / ${questions.length} 題`}>
+      <p className="text-lg font-medium text-slate-800 mb-4">{currentQuestion.question}</p>
 
       <div className="space-y-3 mb-6">
-        {actions.map((action, i) => (
-          <button
-            key={i}
-            onClick={() => toggle(action)}
-            className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 transition active:scale-95 text-left ${
-              checked.includes(action)
-                ? "bg-green-50 border-green-500 shadow-md"
-                : "bg-white border-slate-300 hover:border-green-400 hover:shadow-sm"
-            }`}
-          >
-            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${
-              checked.includes(action)
-                ? "bg-green-500 border-green-500"
-                : "bg-white border-slate-400"
-            }`}>
-              {checked.includes(action) && (
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </div>
-            <span className={`flex-1 ${checked.includes(action) ? "text-slate-900 font-medium" : "text-slate-800"}`}>
-              {action.text}
-            </span>
-          </button>
-        ))}
+        {currentQuestion.options.map((option, i) => {
+          const isSelected = selected === option;
+          const showResult = showFeedback && isSelected;
+          const isCorrect = option.correct;
+
+          return (
+            <button
+              key={i}
+              onClick={() => selectOption(option)}
+              disabled={showFeedback}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition active:scale-95 text-left ${
+                showResult
+                  ? isCorrect
+                    ? "bg-green-50 border-green-500 shadow-md"
+                    : "bg-red-50 border-red-500 shadow-md"
+                  : isSelected
+                  ? "bg-blue-50 border-blue-500 shadow-md"
+                  : "bg-white border-slate-300 hover:border-blue-400 hover:shadow-sm"
+              } ${showFeedback ? "cursor-not-allowed" : ""}`}
+            >
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
+                showResult
+                  ? isCorrect
+                    ? "bg-green-500 border-green-500"
+                    : "bg-red-500 border-red-500"
+                  : isSelected
+                  ? "bg-blue-500 border-blue-500"
+                  : "bg-white border-slate-400"
+              }`}>
+                {isSelected && !showFeedback && (
+                  <div className="w-3 h-3 rounded-full bg-white"></div>
+                )}
+                {showResult && (
+                  <span className="text-white font-bold text-base">
+                    {isCorrect ? "✓" : "✗"}
+                  </span>
+                )}
+              </div>
+              <span className={`flex-1 ${isSelected ? "text-slate-900 font-medium" : "text-slate-800"}`}>
+                {option.text}
+              </span>
+            </button>
+          );
+        })}
       </div>
+
+      {showFeedback && (
+        <div className={`mb-4 p-4 rounded-xl ${selected?.correct ? "bg-green-50" : "bg-red-50"}`}>
+          <p className={`text-sm ${selected?.correct ? "text-green-800" : "text-red-800"}`}>
+            {selected?.correct ? "✓ 正確！" : "✗ 這個選項可能不夠友善"}
+          </p>
+        </div>
+      )}
 
       <button
         onClick={submit}
-        disabled={checked.length < 3}
+        disabled={!selected || showFeedback}
         className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
       >
-        {checked.length < 3 ? `請至少選擇 3 項 (已選 ${checked.length})` : "提交答案 ✓"}
+        {!selected ? "請選擇一個答案" : showFeedback ? "載入下一題..." : "確認答案 ✓"}
       </button>
     </StageContainer>
   );
